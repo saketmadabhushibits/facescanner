@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FaceScanner · Objective Facial Analysis</title>
+  <meta name="description" content="Objective facial analysis: beauty ratio score and country-similarity breakdown from a photo." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="gradient-bg"></div>
+
+  <header class="site-header">
+    <div class="logo">
+      <i data-lucide="scan-face" class="logo-icon"></i>
+      <div>
+        <div class="brand">FaceScanner</div>
+        <div class="tagline">Objective facial analysis</div>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <a href="#analyze"><i data-lucide="camera"></i><span>Analyze</span></a>
+      <a href="#about"><i data-lucide="info"></i><span>About</span></a>
+    </nav>
+  </header>
+
+  <main id="analyze">
+    <section class="hero">
+      <span class="eyebrow">
+        <i data-lucide="sparkles"></i>
+        Powered by facial landmarks &amp; UTKFace-trained CNN
+      </span>
+      <h1>Discover the <span class="gradient-text">geometry</span> of your face.</h1>
+      <p class="lede">
+        Upload a clear, front-facing photo. We'll compute a beauty ratio from
+        symmetry and classical proportion metrics, then break down which
+        regions of the world your features most resemble.
+      </p>
+    </section>
+
+    <section class="capture-panel glass-card">
+      <div class="capture-tabs" role="tablist">
+        <button class="tab active" data-tab="camera" role="tab">
+          <i data-lucide="camera"></i> Camera
+        </button>
+        <button class="tab" data-tab="upload" role="tab">
+          <i data-lucide="image-plus"></i> Upload
+        </button>
+      </div>
+
+      <div class="capture-body">
+        <div class="stage">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <img id="preview" alt="Selected face" />
+          <div class="stage-placeholder" id="placeholder">
+            <i data-lucide="user-round"></i>
+            <p>Your photo will appear here</p>
+          </div>
+          <div class="stage-scrim" id="scrim">
+            <div class="spinner"></div>
+            <p>Analyzing face&hellip;</p>
+          </div>
+        </div>
+
+        <div class="capture-controls">
+          <button id="btn-start" class="btn primary"><i data-lucide="play"></i> Start camera</button>
+          <button id="btn-capture" class="btn accent" disabled><i data-lucide="aperture"></i> Capture &amp; analyze</button>
+          <button id="btn-retake" class="btn ghost" hidden><i data-lucide="rotate-ccw"></i> Retake</button>
+
+          <div class="upload-wrap" hidden>
+            <input type="file" id="file-input" accept="image/*" />
+            <label for="file-input" class="btn primary full">
+              <i data-lucide="upload-cloud"></i> Choose a photo
+            </label>
+            <p class="hint">JPG or PNG, up to 10 MB.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="status-msg" class="status" hidden></div>
+    </section>
+
+    <section id="results" class="results" hidden>
+      <!-- Beauty score card ------------------------------------------------ -->
+      <article class="result-card glass-card beauty-card">
+        <header class="card-header">
+          <div class="card-title">
+            <i data-lucide="sparkles"></i>
+            <h2>Beauty Ratio</h2>
+          </div>
+          <span class="badge" id="beauty-band">—</span>
+        </header>
+
+        <div class="beauty-body">
+          <div class="score-ring">
+            <svg viewBox="0 0 160 160">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff85c1"/>
+                  <stop offset="50%" stop-color="#a78bfa"/>
+                  <stop offset="100%" stop-color="#60a5fa"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="80" cy="80" r="68"></circle>
+              <circle class="ring-fg" id="ring-fg" cx="80" cy="80" r="68"
+                stroke-dasharray="427" stroke-dashoffset="427"></circle>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-score" id="ring-score">0</div>
+              <div class="ring-label">out of 100</div>
+            </div>
+          </div>
+
+          <ul class="metrics" id="metrics-list"></ul>
+        </div>
+
+        <ul class="notes" id="beauty-notes"></ul>
+
+        <p class="disclaimer">
+          <i data-lucide="shield-check"></i>
+          Mathematical proportions only &mdash; &ldquo;beauty&rdquo; is
+          subjective. Lighting and angle affect scores.
+        </p>
+      </article>
+
+      <!-- Country breakdown card ----------------------------------------- -->
+      <article class="result-card glass-card country-card">
+        <header class="card-header">
+          <div class="card-title">
+            <i data-lucide="globe-2"></i>
+            <h2>Country Resemblance</h2>
+          </div>
+          <span class="badge" id="country-primary">—</span>
+        </header>
+
+        <div class="country-body">
+          <div class="macro-strip" id="macro-strip"></div>
+          <ul class="country-list" id="country-list"></ul>
+        </div>
+
+        <p class="disclaimer">
+          <i data-lucide="info"></i>
+          Trained on UTKFace via
+          <code>nipunarora8/age-gender-and-ethnicity-face-data-csv</code>.
+          Shows similarity, not heritage.
+        </p>
+      </article>
+    </section>
+
+    <section id="about" class="about glass-card">
+      <div class="about-col">
+        <i data-lucide="ruler"></i>
+        <h3>Geometric scoring</h3>
+        <p>Symmetry, golden-ratio checks, facial thirds, eye spacing, jaw balance and lip proportions &mdash; extracted from 468 face-mesh landmarks.</p>
+      </div>
+      <div class="about-col">
+        <i data-lucide="brain-circuit"></i>
+        <h3>CNN classification</h3>
+        <p>A compact convnet trained on the UTKFace 48&times;48 grayscale dataset predicts probabilities across five macro-ethnicities.</p>
+      </div>
+      <div class="about-col">
+        <i data-lucide="lock"></i>
+        <h3>Private by default</h3>
+        <p>Images are processed in memory only &mdash; nothing is stored on disk or sent to third parties.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>FaceScanner &middot; for education and entertainment.</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
