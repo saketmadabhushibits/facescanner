@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# Flask
+instance/
+.webassets-cache
+
+# Models (large binaries - trained artifacts)
+models/*.h5
+models/*.keras
+models/*.tflite
+models/*.onnx
+models/*.pkl
+!models/.gitkeep
+
+# Uploads and temp files
+uploads/
+tmp/
+*.jpg.tmp
+*.png.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# OS
+Thumbs.db
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

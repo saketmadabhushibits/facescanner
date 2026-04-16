@@ -1,0 +1,10 @@
+Flask==3.0.3
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+mediapipe==0.10.14
+Pillow==10.4.0
+scikit-learn==1.5.1
+# Optional training-only dependencies (install separately if training):
+# tensorflow==2.16.1
+# pandas==2.2.2
+# kagglehub[pandas-datasets]==0.3.0
